@@ -1,0 +1,63 @@
+# ========================
+# Model & Data Files
+# ========================
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# Virtual Environments
+venv/
+env/
+.env/
+.venv/
+
+# Distribution / Packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# ========================
+# Jupyter Notebooks
+# ========================
+.ipynb_checkpoints/
+*.ipynb
+
+# ========================
+# Environment Variables
+# ========================
+.env
+.env.*
+*.env
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ========================
+# Logs & Temp Files
+# ========================
+*.log
+*.tmp
+*.cache
