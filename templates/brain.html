@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeuroGuard AI — Brain Tumor Detection</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ── Brain-specific overrides ────────────────────── */
+    .drop-zone {
+      border: 2px dashed rgba(139,92,246,0.5);
+      border-radius: 14px;
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.25s, border-color 0.25s;
+      background: rgba(139,92,246,0.04);
+      position: relative;
+    }
+    .drop-zone.dragover,
+    .drop-zone:hover {
+      background: rgba(139,92,246,0.10);
+      border-color: rgba(139,92,246,0.9);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .drop-zone-icon { font-size: 2.4rem; margin-bottom: 8px; }
+    .drop-zone-text { color: var(--text-muted, #94a3b8); font-size: 0.9rem; }
+    .drop-zone-text strong { color: var(--accent, #a78bfa); }
+
+    #image-preview {
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin-top: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    /* Probability chart card */
+    .chart-block {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
+      padding: 18px 20px 12px;
+      margin-bottom: 16px;
+    }
+    .chart-block .section-header {
+      margin-bottom: 14px;
+    }
+    #tumorChart { max-height: 220px; }
+
+    /* Tumor class badge */
+    .tumor-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(139,92,246,0.18);
+      color: #c4b5fd;
+      border: 1px solid rgba(139,92,246,0.35);
+      margin-top: 6px;
+    }
+
+    /* Back link */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted, #94a3b8);
+      text-decoration: none;
+      margin-bottom: 18px;
+      opacity: 0.75;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover { opacity: 1; }
+  </style>
+</head>
+
+<!-- ★ data-page="brain" tells script.js which page we're on -->
+<body data-page="brain">
+
+  <!-- Background (same as heart page) -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <div class="app-wrapper">
+
+    <!-- Header -->
+    <header class="site-header">
+      <div class="logo">
+        <span class="logo-icon">🧠</span>
+        <span class="logo-text">NeuroGuard<em>AI</em></span>
+      </div>
+      <p class="tagline">AI-Based Brain Tumor Detection from MRI Scans</p>
+    </header>
+
+    <main class="main-grid">
+
+      <!-- LEFT: Upload -->
+      <section class="form-card card">
+        <a href="/" class="back-link">← Back to Dashboard</a>
+        <div class="card-label">MRI Analysis</div>
+        <h2 class="card-title">Upload Brain MRI</h2>
+
+        <!--
+          FIXED:
+          • id="predict-form"   — matches script.js initImageForm listener
+          • enctype kept for FormData
+        -->
+        <form id="predict-form" enctype="multipart/form-data" novalidate>
+
+          <div class="form-group">
+            <label>Select or Drop MRI Image</label>
+
+            <!-- Drop zone — file input inside for click + drag support -->
+            <div class="drop-zone" id="drop-zone">
+              <!--
+                FIXED:
+                • id="image-input" — matches script.js initImageUpload + initImageForm
+                • name="file"       — matches app.py request.files["file"]
+              -->
+              <input type="file" id="image-input" name="file" accept="image/*" required />
+              <div id="upload-placeholder">
+                <div class="drop-zone-icon">🫁</div>
+                <div class="drop-zone-text">
+                  <strong>Click to browse</strong> or drag & drop<br>
+                  Supports JPG, PNG, WEBP
+                </div>
+              </div>
+            </div>
+
+            <!-- Preview shows after file chosen -->
+            <img id="image-preview" class="hidden" alt="MRI Preview" />
+          </div>
+
+          <button type="submit" class="btn-predict" id="submit-btn">
+            <span class="btn-text">Analyze & Detect</span>
+            <span class="btn-icon">→</span>
+          </button>
+
+        </form>
+      </section>
+
+      <!-- RIGHT: Results -->
+      <section class="results-panel" id="results-panel">
+
+        <!-- Idle -->
+        <div class="idle-state" id="idle-state">
+          <div class="idle-icon">🧠</div>
+          <p class="idle-text">Upload an MRI scan and click<br><strong>Analyze & Detect</strong> to see results.</p>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading-state hidden" id="loading-state">
+          <div class="heartbeat-loader">
+            <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+              <polyline class="hb-line" points="0,30 30,30 50,5 70,55 90,30 110,30 130,20 150,40 170,30 200,30"/>
+            </svg>
+          </div>
+          <p>Analyzing MRI image…</p>
+        </div>
+
+        <!-- Result -->
+        <div class="result-content hidden" id="result-content">
+
+          <!-- Verdict -->
+          <div class="result-verdict" id="result-verdict">
+            <div class="verdict-icon" id="verdict-icon">✓</div>
+            <div class="verdict-text">
+              <div class="verdict-label" id="verdict-label">No Tumor</div>
+              <div class="verdict-sub"  id="verdict-sub">Brain appears normal</div>
+              <span class="tumor-badge" id="tumor-badge"></span>
+            </div>
+          </div>
+
+          <!-- Confidence bar -->
+          <div class="confidence-block card-inner">
+            <div class="conf-label">Prediction Confidence</div>
+            <div class="conf-bar-wrap">
+              <div class="conf-bar" id="conf-bar"></div>
+            </div>
+            <div class="conf-value" id="conf-value">0%</div>
+          </div>
+
+          <!-- ★ Tumor class probability chart -->
+          <div class="chart-block section-block">
+            <div class="section-header">📊 Tumor Class Probabilities</div>
+            <canvas id="tumorChart"></canvas>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="section-block card-inner">
+            <div class="section-header">📋 Medical Recommendations</div>
+            <ul class="rec-list" id="rec-list"></ul>
+          </div>
+
+          <!-- Diet Plan -->
+          <div class="section-block card-inner">
+            <div class="section-header">🥗 Personalized Diet Plan</div>
+            <div class="diet-grid" id="diet-grid"></div>
+          </div>
+
+        </div>
+
+        <!-- Error -->
+        <div class="error-state hidden" id="error-state">
+          <div class="error-icon">⚠️</div>
+          <p id="error-msg">Something went wrong. Please try again.</p>
+          <button onclick="resetError()" class="btn-retry">Try Again</button>
+        </div>
+
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>NeuroGuard AI — For educational and clinical research purposes only. Not a substitute for professional medical advice.</p>
+    </footer>
+
+  </div>
+
+
+  <script>
+    /* ── Client-side MRI image validation ───────────────────────────────────
+       Runs BEFORE the server to give instant feedback and block obvious
+       non-MRI uploads (color photos, GIFs, PDFs renamed as images, etc.)
+    ─────────────────────────────────────────────────────────────────────── */
+    (function () {
+      const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+      const MAX_SIZE_MB   = 10;
+
+      function showClientError(msg) {
+        const errEl = document.getElementById("error-msg");
+        const errState = document.getElementById("error-state");
+        const idle     = document.getElementById("idle-state");
+        ["idle-state","loading-state","result-content"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add("hidden");
+        });
+        if (errEl) errEl.textContent = msg;
+        if (errState) errState.classList.remove("hidden");
+      }
+
+      function resetClientError() {
+        const errState = document.getElementById("error-state");
+        const idle     = document.getElementById("idle-state");
+        if (errState) errState.classList.add("hidden");
+        if (idle)     idle.classList.remove("hidden");
+      }
+
+      function validateImageColor(file, callback) {
+        /* Reject obviously colorful photos by sampling pixel saturation */
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = function () {
+          const canvas = document.createElement("canvas");
+          const SAMPLE = 100;
+          canvas.width  = SAMPLE;
+          canvas.height = SAMPLE;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, SAMPLE, SAMPLE);
+          URL.revokeObjectURL(url);
+
+          const pixels = ctx.getImageData(0, 0, SAMPLE, SAMPLE).data;
+          let totalDiff = 0;
+          let count = 0;
+          for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i], g = pixels[i+1], b = pixels[i+2];
+            totalDiff += Math.abs(r - g) + Math.abs(g - b) + Math.abs(r - b);
+            count++;
+          }
+          const avgDiff = totalDiff / count;
+          /* MRI scans are near-grayscale; colorful images have high avgDiff */
+          if (avgDiff > 28) {
+            callback(false, "This looks like a color photograph, not an MRI scan. Please upload a grayscale brain MRI image.");
+          } else {
+            callback(true, "ok");
+          }
+        };
+        img.onerror = function () {
+          callback(false, "Could not read the image file. Please try a different file.");
+        };
+        img.src = url;
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const fileInput = document.getElementById("image-input");
+        const form      = document.getElementById("predict-form");
+        if (!fileInput) return;
+
+        fileInput.addEventListener("change", function () {
+          const file = fileInput.files[0];
+          if (!file) return;
+          resetClientError();
+
+          /* 1. MIME type check */
+          if (!ALLOWED_TYPES.includes(file.type)) {
+            showClientError(
+              "Unsupported file type: " + (file.type || "unknown") +
+              ". Please upload a JPG, PNG, or WEBP brain MRI scan."
+            );
+            fileInput.value = "";
+            return;
+          }
+
+          /* 2. File size check */
+          if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+            showClientError("File is too large (max " + MAX_SIZE_MB + " MB). Please upload a smaller image.");
+            fileInput.value = "";
+            return;
+          }
+
+          /* 3. Color saturation check (async) */
+          validateImageColor(file, function (ok, reason) {
+            if (!ok) {
+              showClientError(reason);
+              fileInput.value = "";
+              /* Hide preview if shown */
+              const preview = document.getElementById("image-preview");
+              const placeholder = document.getElementById("upload-placeholder");
+              if (preview) { preview.src = ""; preview.classList.add("hidden"); }
+              if (placeholder) placeholder.classList.remove("hidden");
+            }
+          });
+        });
+      });
+    })();
+  </script>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

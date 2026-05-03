@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HeartGuard AI — Heart Disease Detection</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
+  <style>
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted, #94a3b8);
+      text-decoration: none;
+      margin-bottom: 18px;
+      opacity: 0.75;
+      transition: opacity 0.2s;
+    }
+    .back-link:hover { opacity: 1; }
+  </style>
+</head>
+
+<!-- data-page="heart" so script.js routes to initHeartForm() -->
+<body data-page="heart">
+
+  <!-- Background -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <div class="app-wrapper">
+
+    <!-- Header -->
+    <header class="site-header">
+      <div class="logo">
+        <span class="logo-icon">♥</span>
+        <span class="logo-text">HeartGuard<em>AI</em></span>
+      </div>
+      <p class="tagline">Explainable AI-Based Heart Disease Detection System</p>
+    </header>
+
+    <main class="main-grid">
+
+      <!-- LEFT: Form -->
+      <section class="form-card card">
+        <a href="/" class="back-link">← Back to Dashboard</a>
+        <div class="card-label">Patient Assessment</div>
+        <h2 class="card-title">Enter Clinical Data</h2>
+
+        <form id="predict-form" novalidate>
+
+          <!-- ── Age ── -->
+          <div class="form-group">
+            <label for="age">
+              Age <span class="unit">(years)</span>
+              <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Patient's age in years. Risk increases significantly after 45.</span></span>
+            </label>
+            <div class="slider-input-row">
+              <input type="range"  id="age-slider"  min="20" max="100" value="50" class="slider"/>
+              <input type="number" id="age" name="age" min="1" max="120" value="50" class="num-input" required/>
+            </div>
+          </div>
+
+          <!-- ── Sex ── -->
+          <div class="form-group">
+            <label for="sex">
+              Sex
+              <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Biological sex. Males have higher cardiovascular risk in most studies.</span></span>
+            </label>
+            <select id="sex" name="sex" required>
+              <option value="">Select…</option>
+              <option value="1">Male</option>
+              <option value="0">Female</option>
+            </select>
+          </div>
+
+          <!-- ── Current Smoker ── -->
+          <div class="form-group">
+            <label for="currentSmoker">
+              Current Smoker
+              <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Whether the patient currently smokes cigarettes.</span></span>
+            </label>
+            <select id="currentSmoker" name="currentSmoker" required>
+              <option value="">Select…</option>
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
+          </div>
+
+          <!-- ── Cigarettes Per Day ── -->
+          <div class="form-group">
+            <label for="cigsPerDay">
+              Cigarettes Per Day
+              <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Average number of cigarettes smoked per day. Enter 0 if non-smoker.</span></span>
+            </label>
+            <div class="slider-input-row">
+              <input type="range"  id="cigsPerDay-slider" min="0" max="60" value="0" class="slider"/>
+              <input type="number" id="cigsPerDay" name="cigsPerDay" min="0" max="100" value="0" class="num-input" required/>
+            </div>
+          </div>
+
+          <!-- ── Total Cholesterol ── -->
+          <div class="form-group">
+            <label for="totChol">
+              Total Cholesterol <span class="unit">(mg/dL)</span>
+              <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Total cholesterol level. Desirable: below 200 mg/dL. High risk: above 240 mg/dL.</span></span>
+            </label>
+            <div class="slider-input-row">
+              <input type="range"  id="totChol-slider" min="100" max="600" value="230" class="slider"/>
+              <input type="number" id="totChol" name="totChol" min="50" max="700" value="230" class="num-input" required/>
+            </div>
+          </div>
+
+          <!-- ── Systolic Blood Pressure ── -->
+          <div class="form-group">
+            <label for="sysBP">
+              Systolic Blood Pressure <span class="unit">(mmHg)</span>
+              <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Systolic BP (upper number). Normal is below 120 mmHg. Hypertension: above 140 mmHg.</span></span>
+            </label>
+            <div class="slider-input-row">
+              <input type="range"  id="sysBP-slider" min="80" max="300" value="130" class="slider"/>
+              <input type="number" id="sysBP" name="sysBP" min="50" max="350" value="130" class="num-input" required/>
+            </div>
+          </div>
+
+          <!-- ── Diastolic Blood Pressure ── -->
+          <div class="form-group">
+            <label for="diaBP">
+              Diastolic Blood Pressure <span class="unit">(mmHg)</span>
+              <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Diastolic BP (lower number). Normal is below 80 mmHg.</span></span>
+            </label>
+            <div class="slider-input-row">
+              <input type="range"  id="diaBP-slider" min="40" max="160" value="85" class="slider"/>
+              <input type="number" id="diaBP" name="diaBP" min="30" max="200" value="85" class="num-input" required/>
+            </div>
+          </div>
+
+          <!-- ── Heart Rate ── -->
+          <div class="form-group">
+            <label for="heartRate">
+              Resting Heart Rate <span class="unit">(bpm)</span>
+              <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Resting heart rate in beats per minute. Normal range: 60–100 bpm.</span></span>
+            </label>
+            <div class="slider-input-row">
+              <input type="range"  id="heartRate-slider" min="40" max="150" value="75" class="slider"/>
+              <input type="number" id="heartRate" name="heartRate" min="20" max="200" value="75" class="num-input" required/>
+            </div>
+          </div>
+
+          <!-- ── Advanced Options ── -->
+          <div class="advanced-toggle" id="advanced-toggle" onclick="toggleAdvanced()">
+            <span class="adv-icon" id="adv-icon">▶</span> Advanced Options
+          </div>
+          <div class="advanced-section" id="advanced-section">
+
+            <!-- BMI -->
+            <div class="form-group">
+              <label for="BMI">
+                BMI <span class="unit">(kg/m²)</span>
+                <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Body Mass Index. Normal: 18.5–24.9. Overweight: 25–29.9. Obese: ≥ 30.</span></span>
+              </label>
+              <div class="slider-input-row">
+                <input type="range"  id="BMI-slider" min="10" max="60" step="0.1" value="25.0" class="slider"/>
+                <input type="number" id="BMI" name="BMI" min="10" max="80" step="0.1" value="25.0" class="num-input" required/>
+              </div>
+            </div>
+
+            <!-- Glucose -->
+            <div class="form-group">
+              <label for="glucose">
+                Glucose Level <span class="unit">(mg/dL)</span>
+                <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Fasting blood glucose. Normal: below 100 mg/dL. Diabetic: above 126 mg/dL.</span></span>
+              </label>
+              <div class="slider-input-row">
+                <input type="range"  id="glucose-slider" min="40" max="400" value="90" class="slider"/>
+                <input type="number" id="glucose" name="glucose" min="40" max="500" value="90" class="num-input" required/>
+              </div>
+            </div>
+
+            <!-- BP Medications -->
+            <div class="form-group">
+              <label for="BPMeds">
+                On BP Medications
+                <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Whether the patient is currently on blood pressure medication.</span></span>
+              </label>
+              <select id="BPMeds" name="BPMeds" required>
+                <option value="">Select…</option>
+                <option value="0" selected>No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+
+            <!-- Prevalent Stroke -->
+            <div class="form-group">
+              <label for="prevalentStroke">
+                History of Stroke
+                <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Whether the patient has had a prior stroke.</span></span>
+              </label>
+              <select id="prevalentStroke" name="prevalentStroke" required>
+                <option value="">Select…</option>
+                <option value="0" selected>No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+
+            <!-- Prevalent Hypertension -->
+            <div class="form-group">
+              <label for="prevalentHyp">
+                Prevalent Hypertension
+                <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Whether the patient has been diagnosed with hypertension.</span></span>
+              </label>
+              <select id="prevalentHyp" name="prevalentHyp" required>
+                <option value="">Select…</option>
+                <option value="0" selected>No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+
+            <!-- Diabetes -->
+            <div class="form-group">
+              <label for="diabetes">
+                Diabetes
+                <span class="tooltip-wrap">ℹ️<span class="tooltip-text">Whether the patient has been diagnosed with diabetes.</span></span>
+              </label>
+              <select id="diabetes" name="diabetes" required>
+                <option value="">Select…</option>
+                <option value="0" selected>No</option>
+                <option value="1">Yes</option>
+              </select>
+            </div>
+
+          </div><!-- /advanced-section -->
+
+          <button type="submit" class="btn-predict" id="submit-btn">
+            <span class="btn-text">Analyze &amp; Predict</span>
+            <span class="btn-icon">→</span>
+          </button>
+
+        </form>
+      </section>
+
+      <!-- RIGHT: Results -->
+      <section class="results-panel" id="results-panel">
+
+        <!-- Idle state -->
+        <div class="idle-state" id="idle-state">
+          <div class="idle-icon">🫀</div>
+          <p class="idle-text">Fill in the patient data and click<br><strong>Analyze &amp; Predict</strong> to see results.</p>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading-state hidden" id="loading-state">
+          <div class="heartbeat-loader">
+            <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+              <polyline class="hb-line" points="0,30 30,30 50,5 70,55 90,30 110,30 130,20 150,40 170,30 200,30"/>
+            </svg>
+          </div>
+          <p>Analyzing cardiac data…</p>
+        </div>
+
+        <!-- Result -->
+        <div class="result-content hidden" id="result-content">
+
+          <div class="result-verdict" id="result-verdict">
+            <div class="verdict-icon"  id="verdict-icon">✓</div>
+            <div class="verdict-text">
+              <div class="verdict-label" id="verdict-label">No Heart Disease</div>
+              <div class="verdict-sub"  id="verdict-sub">Low cardiac risk detected</div>
+            </div>
+          </div>
+
+          <div class="confidence-block card-inner">
+            <div class="conf-label">Prediction Confidence</div>
+            <div class="conf-bar-wrap">
+              <div class="conf-bar" id="conf-bar"></div>
+            </div>
+            <div class="conf-value" id="conf-value">0%</div>
+          </div>
+
+          <!-- Feature Importance -->
+          <div class="section-block card-inner">
+            <div class="section-header">🔍 Top Influencing Factors</div>
+            <div class="feat-list" id="feat-list"></div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="section-block card-inner">
+            <div class="section-header">📋 Medical Recommendations</div>
+            <ul class="rec-list" id="rec-list"></ul>
+          </div>
+
+          <!-- Diet Plan -->
+          <div class="section-block card-inner">
+            <div class="section-header">🥗 Personalized Diet Plan</div>
+            <div class="diet-grid" id="diet-grid"></div>
+          </div>
+
+        </div>
+
+        <!-- Error -->
+        <div class="error-state hidden" id="error-state">
+          <div class="error-icon">⚠️</div>
+          <p id="error-msg">Something went wrong. Please check your inputs.</p>
+          <button onclick="resetError()" class="btn-retry">Try Again</button>
+        </div>
+
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <p>HeartGuard AI — For educational and clinical research purposes only. Not a substitute for professional medical advice.</p>
+    </footer>
+
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

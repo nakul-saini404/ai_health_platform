@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Health Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-deep:    #070d1a;
+      --bg-card:    rgba(255,255,255,0.045);
+      --bg-hover:   rgba(255,255,255,0.085);
+      --border:     rgba(255,255,255,0.08);
+      --text:       #e2e8f0;
+      --muted:      #94a3b8;
+      --accent-1:   #38bdf8;   /* sky */
+      --accent-2:   #22c55e;   /* green */
+      --accent-h:   #f87171;   /* red — heart */
+      --accent-b:   #a78bfa;   /* purple — brain */
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+    }
+
+    /* Ambient glows */
+    body::before, body::after {
+      content: "";
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.18;
+      pointer-events: none;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: var(--accent-b);
+      top: -200px; right: -200px;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: var(--accent-1);
+      bottom: -180px; left: -180px;
+    }
+
+    .container {
+      text-align: center;
+      max-width: 960px;
+      padding: 40px 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent-1);
+      margin-bottom: 16px;
+      opacity: 0.85;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      background: linear-gradient(120deg, var(--accent-1) 0%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin-bottom: 56px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: flex;
+      gap: 28px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 56px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 28px 30px;
+      width: 280px;
+      backdrop-filter: blur(14px);
+      transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+      background: var(--bg-hover);
+    }
+
+    .card.heart:hover { box-shadow: 0 20px 60px rgba(248,113,113,0.18); border-color: rgba(248,113,113,0.35); }
+    .card.brain:hover { box-shadow: 0 20px 60px rgba(167,139,250,0.18); border-color: rgba(167,139,250,0.35); }
+
+    .card-icon {
+      font-size: 3rem;
+      margin-bottom: 18px;
+      line-height: 1;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .card-desc {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: 24px;
+    }
+
+    .card-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .heart .card-tag { background: rgba(248,113,113,0.14); color: #fca5a5; border: 1px solid rgba(248,113,113,0.3); }
+    .brain .card-tag { background: rgba(167,139,250,0.14); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.3); }
+
+    .btn {
+      display: inline-block;
+      padding: 11px 26px;
+      border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #0f172a;
+      text-decoration: none;
+      transition: opacity 0.25s, transform 0.2s;
+      margin-top: auto;
+    }
+    .btn:hover { opacity: 0.88; transform: scale(1.03); }
+    .heart .btn { background: linear-gradient(135deg, #f87171, #fb923c); }
+    .brain .btn { background: linear-gradient(135deg, #a78bfa, #38bdf8); }
+
+    /* ── Footer ── */
+    footer {
+      font-size: 0.8rem;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+    footer span { color: #f87171; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <p class="eyebrow">AI-Powered Diagnostics</p>
+    <h1>AI Healthcare Platform</h1>
+    <p class="subtitle">Select a module to begin intelligent analysis and get personalized health insights powered by machine learning.</p>
+
+    <div class="cards">
+
+      <!-- Heart -->
+      <a href="/heart" class="card heart">
+        <div class="card-icon">❤️</div>
+        <div class="card-tag">Clinical Data</div>
+        <div class="card-title">Heart Disease</div>
+        <p class="card-desc">Predict cardiovascular risk using clinical parameters and explainable AI models.</p>
+        <span class="btn">Start Analysis →</span>
+      </a>
+
+      <!-- Brain -->
+      <a href="/brain" class="card brain">
+        <div class="card-icon">🧠</div>
+        <div class="card-tag">MRI Scan</div>
+        <div class="card-title">Brain Tumor</div>
+        <p class="card-desc">Detect and classify brain tumors from MRI scans using deep learning with class probabilities.</p>
+        <span class="btn">Upload & Detect →</span>
+      </a>
+
+    </div>
+
+    <footer>
+      <span>⚠</span> For educational and research purposes only. Not a substitute for professional medical diagnosis.
+    </footer>
+  </div>
+
+</body>
+</html>
